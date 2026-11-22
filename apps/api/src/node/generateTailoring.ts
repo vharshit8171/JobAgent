@@ -3,6 +3,8 @@ import { llm } from '../lib/llm.js';
 import { tailoringSchema } from '../graph/schemas.js';
 import { collectEvidence, type State, type Update } from '../graph/state.js';
 
+const CANDIDATE_NAME = process.env.CANDIDATE_NAME ?? "Harshit";
+
 // 1. Configure the LLM to generate resume and cover letter content matching the tailoring schema.
 const structured = llm.withStructuredOutput(tailoringSchema, { name: 'tailoring' });
 
@@ -28,7 +30,11 @@ export async function generateTailoring(state: State): Promise<Update> {
 - Use ONLY facts found in the CANDIDATE MATERIAL. Never invent employers, tools, numbers or achievements.
 - Do not claim skills missing from the material. You may mention willingness to learn them.
 - Write 3 to 6 resume bullets and a cover letter under 200 words.
-- Sign the cover letter with "[Your Name]".`
+- Sign the cover letter with "[Your Name]".
+- The candidate's name is ${CANDIDATE_NAME}. Sign the cover letter with it.
+Never use placeholders like [Your Name].
+Do not claim years of experience or any employer that is not in the evidence.
+The candidate is a recent graduate, so frame experience around projects.`
     ),
     new HumanMessage(
       `JOB: ${job?.title} at ${job?.company}
@@ -38,6 +44,7 @@ CANDIDATE MATERIAL:
 ${collectEvidence(state.evidence)}${feedback}`
     ),
   ]);
+  draft.coverLetter = draft.coverLetter.replace(/\[Your Name\]/gi, CANDIDATE_NAME);
 
   // 7. Return the generated draft and updated attempt count to the shared graph state.
   return { draft, attempts: attempt };

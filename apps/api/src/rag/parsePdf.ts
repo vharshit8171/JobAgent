@@ -1,11 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { extractText, getDocumentProxy } from 'unpdf';
 
-export async function parsePdf(filePath: string): Promise<string> {
-    const buffer = await readFile(filePath);
-    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+export async function parsePdfBuffer(data: Uint8Array): Promise<string> {
+    const pdf = await getDocumentProxy(data);
     const { text } = await extractText(pdf, { mergePages: true });
     return text.trim();
+}
+
+export async function parsePdf(filePath: string): Promise<string> {
+    return parsePdfBuffer(new Uint8Array(await readFile(filePath)));
 }
 
 

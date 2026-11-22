@@ -1,56 +1,66 @@
+import { AIMessage } from '@langchain/core/messages';
 import { Application } from '../model/Application.js';
-import type { State, Update } from '../graph/state.js';
+import type { MainStateType, MainUpdate } from '../graph/state.js';
 
-// 1. Handle cases where the candidate's job matching score is below the required threshold.
-export function lowFitReport(_state: State): Update {
+export function lowFitReport(state: MainStateType): MainUpdate {
   console.log('→ lowFitReport');
+  const gaps = (state.matchReport?.items ?? [])
+    .filter((i) => i.status === 'missing')
+    .map((i) => i.requirement);
 
-  // 2. Mark the workflow outcome as low_fit without generating tailored application content.
-  return { outcome: 'low_fit' };
+  const text =
+    `This role looks like a weak fit right now (match score ${state.score}%), so I skipped tailoring. ` +
+    (gaps.length ? `Main gaps: ${gaps.join(', ')}. ` : '') +
+    'Ask me how to close these gaps, or paste another job.';
+
+  return { outcome: 'low_fit', messages: [new AIMessage(text)] };
 }
 
-// 3. Define an asynchronous node responsible for saving approved applications to MongoDB.
-export async function saveApplication(state: State): Promise<Update> {
 
-  // 4. Discard the generated draft if the user has not approved it.
+export async function saveApplication(state: MainStateType): Promise<MainUpdate> {
+  const job = state.parsedJob;
+
   if (!state.reviewApproved) {
     console.log('→ saveApplication: draft discarded');
-    return { outcome: 'discarded' };
+    return {
+      outcome: 'discarded',
+      messages: [new AIMessage('Okay, I discarded that draft. Nothing was saved.')],
+    };
   }
 
-  // 5. Save the approved job analysis and tailored application content to MongoDB.
-  await Application.create({
-    userId: state.userId,
-    company: state.parsedJob?.company,
-    title: state.parsedJob?.title,
-    jobDescription: state.jobDescription,
-    score: state.score,
-    matchReport: state.matchReport,
-    draft: state.draft,
-  });
+  if (!job?.company || !job?.title) {
+    throw new Error('Cannot save application: company or job title is missing');
+  }
 
-  // 6. Log successful database storage and mark the workflow as completed.
-  console.log('→ saveApplication: saved to MongoDB');
-  return { outcome: 'saved' };
+  await Application.findOneAndUpdate(
+    {
+      userId: state.userId,
+      company: job.company,
+      title: job.title,
+    },
+    {
+      $set: {
+        jobDescription: state.jobDescription,
+        score: state.score,
+        matchReport: state.matchReport,
+        draft: state.draft,
+      },
+    },
+    {
+      upsert: true,
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  console.log('→ saveApplication: application upserted in MongoDB');
+
+  return {
+    outcome: 'saved',
+    messages: [
+      new AIMessage(
+        `Saved your application for ${job.title} at ${job.company} (match ${state.score}%). Ask me to list your applications or update a status.`
+      ),
+    ],
+  };
 }
-
-
-/**
- * 💾 JOB APPLICATION WORKFLOW COMPLETION
- *
- * WHAT THIS FILE DOES:
- * 1. Provides a low-fit handler for candidates whose matching score is below the required threshold.
- * 2. Marks low-fit applications without proceeding to resume tailoring.
- * 3. Checks whether the user has approved the generated application content.
- * 4. Discards unapproved drafts instead of saving them to the database.
- * 5. Saves approved application details, matching reports, scores, and tailored drafts to MongoDB.
- * 6. Updates the final workflow outcome based on the operation performed.
- *
- * WHY IT EXISTS:
- * - Workflow Completion: Handles the final stages of the JobAgent analysis process.
- * - Quality Control: Ensures only user-approved application drafts are saved.
- * - Low-Fit Handling: Avoids unnecessary tailoring for candidates with insufficient job matches.
- * - Data Persistence: Stores approved application information for future access.
- * - Outcome Tracking: Distinguishes between saved, discarded, and low-fit applications.
- * - Separation of Concerns: Keeps database operations and workflow completion logic separate from AI processing.
- */

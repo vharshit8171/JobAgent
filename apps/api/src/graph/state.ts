@@ -1,8 +1,8 @@
-import { Annotation } from '@langchain/langgraph';
+import { Annotation, MessagesAnnotation } from '@langchain/langgraph';
 import type { MatchReport, ParsedJob, Tailoring } from './schemas.js';
 
 // 1. Create a reusable state field with an initial value and a "last write wins" update strategy.
-function field<T>(initial: T) {
+export function field<T>(initial: T) {
   return Annotation<T>({
     reducer: (_old, next) => next, // Replace the previous value with the latest update.
     default: () => initial, // Provide the initial value when the graph starts.
@@ -32,6 +32,32 @@ export type Update = typeof AnalysisState.Update;
 export function collectEvidence(evidence: Record<string, string[]>): string {
   return [...new Set(Object.values(evidence).flat())].join('\n---\n');
 }
+
+/** The main graph's state: chat messages + everything the analysis workflow needs. */
+export const MainState = Annotation.Root({
+  ...MessagesAnnotation.spec,
+  ...AnalysisState.spec,
+  intent: field<'analyze_job' | 'chat'>('chat'),
+});
+
+export type MainStateType = typeof MainState.State;
+export type MainUpdate = typeof MainState.Update;
+
+/**
+ * State survives between messages in a thread. Without this reset, a second job
+ * analysis would start with the first one's retry count and old draft.
+ */
+export const resetAnalysis: Update = {
+  parsedJob: null,
+  evidence: {},
+  matchReport: null,
+  score: 0,
+  draft: null,
+  groundingIssues: [],
+  attempts: 0,
+  reviewApproved: null,
+  outcome: null,
+};
 
 
 /**

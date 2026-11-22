@@ -10,6 +10,7 @@ const schema = z.object({
     GROQ_API_KEY: z.string().optional(),
     TAVILY_API_KEY: z.string().optional(),
     GOOGLE_API_KEY: z.string().optional(),
+    WEB_ORIGIN: z.string().default('http://localhost:3000'),
 });
 
 const parsed = schema.safeParse(process.env);
