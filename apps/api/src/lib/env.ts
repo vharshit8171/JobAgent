@@ -10,6 +10,9 @@ const schema = z.object({
     GROQ_API_KEY: z.string().optional(),
     TAVILY_API_KEY: z.string().optional(),
     GOOGLE_API_KEY: z.string().optional(),
+    CLERK_PUBLISHABLE_KEY: z.string().min(1),
+    CLERK_SECRET_KEY: z.string().min(1),
+    DAILY_MESSAGE_LIMIT: z.coerce.number().default(50),
     WEB_ORIGIN: z.string().default('http://localhost:3000'),
 });
 

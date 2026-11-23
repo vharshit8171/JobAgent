@@ -6,6 +6,7 @@ import { asyncHandler, HttpError } from '../lib/http.js';
 import { Thread } from '../model/Thread.js';
 import { graph } from '../graph/mainGraph.js';
 import { streamRun } from '../graph/streamGraph.js';
+import { agentLimiter, enforceDailyQuota } from '../lib/limits.js';
 
 const chatBody = z.object({
     threadId: z.string().uuid().optional(),
@@ -27,44 +28,40 @@ async function requireThread(threadId: string, userId: string) {
 
 export const chatRouter = Router();
 
-chatRouter.post(
-    '/',
-    asyncHandler(async (req, res) => {
-        const userId: string = res.locals.userId;
-        const { threadId: existingId, message } = parse(chatBody, req.body);
+chatRouter.post('/', agentLimiter, enforceDailyQuota, asyncHandler(async (req, res) => {
+    const userId: string = res.locals.userId;
+    const { threadId: existingId, message } = parse(chatBody, req.body);
 
-        let threadId: string;
-        if (existingId) {
-            await requireThread(existingId, userId);
-            await Thread.updateOne({ threadId: existingId }, { $set: { lastMessageAt: new Date() } });
-            threadId = existingId;
-        } else {
-            threadId = randomUUID(); // the server decides thread ids
-            await Thread.create({ threadId, userId, title: message.split('\n')[0].slice(0, 60) });
-        }
+    let threadId: string;
+    if (existingId) {
+        await requireThread(existingId, userId);
+        await Thread.updateOne({ threadId: existingId }, { $set: { lastMessageAt: new Date() } });
+        threadId = existingId;
+    } else {
+        threadId = randomUUID(); // the server decides thread ids
+        await Thread.create({ threadId, userId, title: message.split('\n')[0].slice(0, 60) });
+    }
 
-        await streamRun(res, threadId, userId, {
-            userId,
-            messages: [{ role: 'user', content: message }],
-        });
-    })
+    await streamRun(res, threadId, userId, {
+        userId,
+        messages: [{ role: 'user', content: message }],
+    });
+})
 );
 
-chatRouter.post(
-    '/:threadId/review',
-    asyncHandler(async (req, res) => {
-        const userId: string = res.locals.userId;
-        const threadId = String(req.params.threadId);
-        const { approved } = parse(reviewBody, req.body);
+chatRouter.post('/:threadId/review', agentLimiter, asyncHandler(async (req, res) => {
+    const userId: string = res.locals.userId;
+    const threadId = String(req.params.threadId);
+    const { approved } = parse(reviewBody, req.body);
 
-        await requireThread(threadId, userId);
+    await requireThread(threadId, userId);
 
-        // Only resume if the graph is really paused at the review step.
-        const snapshot = await graph.getState({ configurable: { thread_id: threadId } });
-        if (!snapshot.next.includes('humanReview')) {
-            throw new HttpError(409, 'This conversation is not waiting for a review');
-        }
+    // Only resume if the graph is really paused at the review step.
+    const snapshot = await graph.getState({ configurable: { thread_id: threadId } });
+    if (!snapshot.next.includes('humanReview')) {
+        throw new HttpError(409, 'This conversation is not waiting for a review');
+    }
 
-        await streamRun(res, threadId, userId, new Command({ resume: { approved } }));
-    })
+    await streamRun(res, threadId, userId, new Command({ resume: { approved } }));
+})
 );

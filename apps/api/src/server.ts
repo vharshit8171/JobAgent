@@ -1,48 +1,47 @@
-import express from 'express';
+import express, { type RequestHandler } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { clerkMiddleware, getAuth } from '@clerk/express';
 import { env } from './lib/env.js';
-import { DEV_USER_ID } from './lib/config.js';
 import { errorHandler } from './lib/http.js';
+import { apiLimiter } from './lib/limits.js';
 import { connectMongo, pingMongo } from './lib/mongo.js';
 import { pingQdrant } from './lib/qdrant.js';
 import { resumeRouter } from './routes/resume.js';
 import { chatRouter } from './routes/chat.js';
 import { threadsRouter } from './routes/thread.js';
 import { applicationsRouter } from './routes/applications.js';
-import type { Request, Response, NextFunction } from 'express';
 
 const app = express();
+app.use(helmet());
 app.use(cors({ origin: env.WEB_ORIGIN }));
 app.use(express.json({ limit: '1mb' }));
+app.use(clerkMiddleware()); // verifies the token and attaches the auth state
 
+// Public, so hosting platforms can check that the API is alive.
 app.get('/health', async (_req, res) => {
     const [mongo, qdrant] = await Promise.all([pingMongo(), pingQdrant()]);
     const ok = mongo && qdrant;
     res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', mongo, qdrant });
 });
 
-// Phase 6 replaces this with real authentication.
-app.use('/api', (_req, res, next) => {
-    res.locals.userId = DEV_USER_ID;
+/** Everything under /api needs a signed-in user. */
+const requireUser: RequestHandler = (req, res, next) => {
+    const { userId } = getAuth(req);
+    if (!userId) {
+        res.status(401).json({ error: 'Sign in to continue' });
+        return;
+    }
+    res.locals.userId = userId; // the only source of userId from now on
     next();
-});
+};
 
+app.use('/api', requireUser, apiLimiter);
 app.use('/api/resume', resumeRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/threads', threadsRouter);
 app.use('/api/applications', applicationsRouter);
 
-app.use(
-    (err: any, _req: Request, res: Response, next: NextFunction) => {
-        if (err?.type === 'entity.parse.failed') {
-            return res.status(400).json({ error: 'Invalid JSON body' });
-        }
-
-        next(err);
-    }
-);
-
-app.use(errorHandler);
 app.use(errorHandler);
 
 async function start() {

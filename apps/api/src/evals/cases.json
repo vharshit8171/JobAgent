@@ -1,0 +1,21 @@
+[
+    {
+        "name": "mern-junior",
+        "file": "evals/jobs/mern-junior.txt",
+        "expectFit": "high",
+        "mustFind": [
+            "React",
+            "Node.js",
+            "MongoDB"
+        ]
+    },
+    {
+        "name": "senior-data-scientist",
+        "file": "evals/jobs/senior-data-scientist.txt",
+        "expectFit": "low",
+        "mustFind": [
+            "Python",
+            "machine learning"
+        ]
+    }
+]

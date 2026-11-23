@@ -11,6 +11,7 @@ export const llm = new ChatGroq({
   model: 'openai/gpt-oss-120b',
   temperature: 0, // Keep responses consistent and reduce randomness.
   maxRetries: 4, // Retry failed API requests up to four times.
+  maxTokens: 2000,
   apiKey: env.GROQ_API_KEY, // Authenticate requests using the configured Groq API key.
 });
 

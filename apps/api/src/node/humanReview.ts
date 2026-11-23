@@ -2,32 +2,28 @@ import { interrupt } from '@langchain/langgraph';
 import type { MatchReport, Tailoring } from '../graph/schemas.js';
 import type { State, Update } from '../graph/state.js';
 
-// 1. Define the information that will be presented to the user for manual review.
 export type ReviewRequest = {
+  job: { title: string; company: string } | null;
   score: number;
   report: MatchReport | null;
   draft: Tailoring | null;
   groundingIssues: string[];
 };
-
-// 2. Define the structure of the user's review decision.
 export type ReviewDecision = { approved: boolean };
 
-// 3. Define a LangGraph node that pauses execution and requests human approval.
 export function humanReview(state: State): Update {
-
-  // 4. Interrupt graph execution and pass the current analysis results to the caller.
+  // The graph stops right here and hands this object to the caller.
   const decision = interrupt({
+    job: state.parsedJob
+      ? { title: state.parsedJob.title, company: state.parsedJob.company }
+      : null,
     score: state.score,
     report: state.matchReport,
     draft: state.draft,
     groundingIssues: state.groundingIssues,
   } satisfies ReviewRequest) as ReviewDecision;
 
-  // 5. Log whether the user approved or rejected the generated application content.
   console.log(`→ humanReview: ${decision.approved ? 'approved' : 'rejected'}`);
-
-  // 6. Return the user's decision to update the shared LangGraph state.
   return { reviewApproved: decision.approved };
 }
 

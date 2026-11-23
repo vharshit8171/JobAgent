@@ -1,8 +1,9 @@
-import { Router } from 'express';
 import multer from 'multer';
+import { Router } from 'express';
+import { Resume } from '../model/Resume.js';
+import { uploadLimiter } from '../lib/limits.js';
 import { asyncHandler, HttpError } from '../lib/http.js';
 import { ingestResume } from '../rag/ingestResume.js';
-import { Resume } from '../model/Resume.js';
 
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -15,6 +16,7 @@ export const resumeRouter = Router();
 
 resumeRouter.post(
     '/',
+    uploadLimiter,
     upload.single('file'),
     asyncHandler(async (req, res) => {
         if (!req.file) throw new HttpError(400, 'Attach a PDF in the "file" field');

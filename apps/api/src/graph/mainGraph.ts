@@ -12,9 +12,7 @@ import { generateTailoring } from '../node/generateTailoring.js';
 import { groundingCheck } from '../node/groundingCheck.js';
 import { humanReview } from '../node/humanReview.js';
 import { lowFitReport, saveApplication } from '../node/finish.js';
-
-const FIT_THRESHOLD = 40; // percent
-const MAX_RETRIES = 2;
+import { FIT_THRESHOLD, MAX_RETRIES } from './config.js';
 
 function routeIntent(state: MainStateType): 'chatAgent' | 'parseJob' {
   return state.intent === 'analyze_job' ? 'parseJob' : 'chatAgent';
