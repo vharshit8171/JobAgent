@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-desk: #e6e9ed;
+  --color-sheet: #fcfcfd;
+  --color-graphite: #232830;
+  --color-pencil: #667085;
+  --color-rule: #d5dae1;
+  --color-cobalt: #2a44d4;
+  --color-cobalt-dark: #1f33a8;
+  --color-marker-green: #c6f6a8;
+  --color-marker-yellow: #ffee8a;
+  --color-covered: #3f9b52;
+  --color-partial: #e0b400;
+  --color-red-pen: #e0453a;
+  --color-red-ink: #b42318;
+}
+
+@theme inline {
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-doc), ui-serif, Georgia, serif;
+}
+
+body {
+  background: var(--color-desk);
+  color: var(--color-graphite);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cobalt);
+  outline-offset: 2px;
+}
+
+/* Highlighter marks */
+.swipe {
+  background-image: linear-gradient(
+    transparent 48%,
+    var(--mark, var(--color-marker-yellow)) 48%,
+    var(--mark, var(--color-marker-yellow)) 92%,
+    transparent 92%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 0.15em;
+  margin: 0 -0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.swipe-green { --mark: var(--color-marker-green); }
+.swipe-yellow { --mark: var(--color-marker-yellow); }
+.swipe-draw {
+  background-size: 0% 100%;
+  animation: swipe-draw 650ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes swipe-draw {
+  to { background-size: 100% 100%; }
+}
+
+/* Red pen: something is missing */
+.pen {
+  text-decoration: underline wavy var(--color-red-pen);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+/* The review sheet slides in once */
+.sheet-in { animation: sheet-in 240ms ease-out; }
+@keyframes sheet-in {
+  from { transform: translateX(2rem); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-draw { animation: none; background-size: 100% 100%; }
+  .sheet-in { animation: none; }
+}
