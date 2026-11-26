@@ -4,10 +4,24 @@ CareerPilot reads your resume, compares it with a job post, and writes tailored 
 
 It is a full-stack AI agent project built with **LangGraph (TypeScript)**, **RAG over Qdrant**, **Express**, **MongoDB**, and **Next.js**.
 
-<!-- Add screenshots here. Upload them to a docs/ folder in the repo, then:
-![Review sheet](docs/review-sheet.png)
-![Chat](docs/chat.png)
--->
+## Screenshots
+
+![JobAgent Screenshot](Screenshot%202026-11-26%20133746.png)
+
+### 1. Resume Management
+Upload your PDF resume so CareerPilot can extract key information to power your job matches and drafts.
+
+![CareerPilot Applications Dashboard](<Screenshot 2026-11-26 183746.png>)
+
+### 2. AI Job Fit Analysis & Chat
+Analyze job descriptions against your uploaded resume to see how well your skills match and get tailored recommendations.
+
+![CareerPilot AI Chat and Fit Analysis](<Screenshot 2026-11-26 182722.png>)
+
+### 3. Applications Tracker
+Keep track of all saved job drafts, match percentages, and application statuses in one place.
+
+![CareerPilot AI Chat and Fit Analysis](<Screenshot 2026-11-26 182855.png>)
 
 ## ✨ What it does
 
