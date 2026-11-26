@@ -1,6 +1,6 @@
-# Margin: an AI job application assistant
+# 🚀 CareerPilot — An AI Job Applications Assistant
 
-Margin reads your resume, compares it with a job post, and writes tailored resume bullets and a cover letter that only use facts found in your resume. You review every draft before it is saved, and you track your applications in one place.
+CareerPilot reads your resume, compares it with a job post, and writes tailored resume bullets and a cover letter that only use facts found in your resume. You review every draft before it is saved, and you track your applications in one place.
 
 It is a full-stack AI agent project built with **LangGraph (TypeScript)**, **RAG over Qdrant**, **Express**, **MongoDB**, and **Next.js**.
 
@@ -9,40 +9,42 @@ It is a full-stack AI agent project built with **LangGraph (TypeScript)**, **RAG
 ![Chat](docs/chat.png)
 -->
 
-## What it does
+## ✨ What it does
 
-- **Upload your resume (PDF).** It is parsed, split into section-aware chunks, embedded, and stored in Qdrant.
-- **Paste a job post.** The agent extracts the requirements, searches your resume for evidence for each one, and scores the match.
-- **Get a grounded draft.** Resume bullets and a cover letter are written from retrieved evidence only. A second pass fact-checks every claim and sends the draft back for a rewrite if something is unsupported.
-- **Review before saving.** The graph pauses for human approval. The review screen marks each requirement like a highlighter pass: green for covered, yellow for partial, a red wavy underline for missing.
-- **Chat about your own experience.** Ask things like "Which of my projects shows backend work best?" and the agent searches your resume with tools.
-- **Track applications.** Saved drafts land in a tracker where you update the status (saved, applied, interview, rejected, offer).
-- **Conversations persist.** Chat history is stored in MongoDB, so you can come back to any thread.
+- 📄 **Upload your resume (PDF).** It is parsed, split into section-aware chunks, embedded, and stored in Qdrant.
+- 🎯 **Paste a job post.** The agent extracts the requirements, searches your resume for evidence for each one, and scores the match.
+- ✍️ **Get a grounded draft.** Resume bullets and a cover letter are written from retrieved evidence only. A second pass fact-checks every claim and sends the draft back for a rewrite if something is unsupported.
+- 👀 **Review before saving.** The graph pauses for human approval. The review screen marks each requirement like a highlighter pass: green for covered, yellow for partial, a red wavy underline for missing.
+- 💬 **Chat about your own experience.** Ask things like "Which of my projects shows backend work best?" and the agent searches your resume with tools.
+- 📊 **Track applications.** Saved drafts land in a tracker where you update the status (saved, applied, interview, rejected, offer).
+- 💾 **Conversations persist.** Chat history is stored in MongoDB, so you can come back to any thread.
 
-## How it works
+## 🧠 How it works
 
 The whole agent is one LangGraph graph. A router decides whether a message is a normal chat or a job post to analyze.
 
 ```mermaid
 flowchart TD
-  S([Start]) --> router
-  router -->|"chat"| chatAgent
-  chatAgent -->|"tool calls"| tools
-  tools --> chatAgent
-  chatAgent -->|"no tool calls"| E1([End])
+    S([Start]) --> router
+    router -->|"chat"| chatAgent
+    chatAgent -->|"tool calls"| tools
+    tools --> chatAgent
+    chatAgent -->|"no tool calls"| E1([End])
 
-  router -->|"analyze job"| parseJob
-  parseJob --> retrieveEvidence
-  retrieveEvidence --> scoreMatch
-  scoreMatch -->|"score below threshold"| lowFitReport
-  lowFitReport --> E2([End])
-  scoreMatch -->|"score ok"| generateTailoring
-  generateTailoring --> groundingCheck
-  groundingCheck -->|"unsupported claims, retries left"| generateTailoring
-  groundingCheck -->|"grounded or retries used"| humanReview
-  humanReview --> saveApplication
-  saveApplication --> E3([End])
+    router -->|"analyze job"| parseJob
+    parseJob --> retrieveEvidence
+    retrieveEvidence --> scoreMatch
+    scoreMatch -->|"score below threshold"| lowFitReport
+    lowFitReport --> E2([End])
+    scoreMatch -->|"score ok"| generateTailoring
+    generateTailoring --> groundingCheck
+    groundingCheck -->|"unsupported claims, retries left"| generateTailoring
+    groundingCheck -->|"grounded or retries used"| humanReview
+    humanReview --> saveApplication
+    saveApplication --> E3([End])
 ```
+
+### ⚙️ Graph nodes
 
 | Node | Type | What it does |
 |---|---|---|
@@ -56,53 +58,53 @@ flowchart TD
 | `humanReview` | `interrupt()` | Pauses the graph until the user approves or discards |
 | `saveApplication` | Plain code | Writes the application to MongoDB |
 
-### Design decisions worth knowing
+### 💡 Design decisions worth knowing
 
-- **Grounding over fluency.** The most important risk in a resume tool is invented experience. Generation is restricted to retrieved evidence, and a separate check verifies it.
-- **The LLM never does arithmetic.** It only labels requirements. The match score is computed in code.
-- **The model never chooses the user ID.** `userId` comes from the verified login and travels in the run config, so tools cannot be talked into reading someone else's data.
-- **State persists between messages.** The router resets the analysis fields whenever a new analysis starts, so one job never inherits another's retry count or draft.
-- **Human in the loop.** Nothing is saved until the user approves it.
+- 🛡️ **Grounding over fluency.** The most important risk in a resume tool is invented experience. Generation is restricted to retrieved evidence, and a separate check verifies it.
+- 🧮 **The LLM never does arithmetic.** It only labels requirements. The match score is computed in code.
+- 🔐 **The model never chooses the user ID.** `userId` comes from the verified login and travels in the run config, so tools cannot be talked into reading someone else's data.
+- 🔄 **State persists between messages.** The router resets the analysis fields whenever a new analysis starts, so one job never inherits another's retry count or draft.
+- 🙋 **Human in the loop.** Nothing is saved until the user approves it.
 
-## Tech stack
+## 🛠️ Tech stack
 
 | Area | Technology |
 |---|---|
-| Agent | LangGraph and LangChain (TypeScript), Groq (`openai/gpt-oss-120b`) |
-| RAG | `unpdf` for parsing, `@langchain/textsplitters`, Gemini `gemini-embedding-001` (768 dimensions), Qdrant |
-| API | Node.js, Express, Zod, Mongoose, Server-Sent Events for streaming |
-| Memory | MongoDB with the LangGraph MongoDB checkpointer |
-| Frontend | Next.js (App Router), Tailwind CSS v4, Zustand, `react-markdown` |
-| Auth | Clerk (social login only) |
-| Protection | `helmet`, per-user rate limits, a daily message quota |
+| 🤖 Agent | LangGraph and LangChain (TypeScript), Groq (`openai/gpt-oss-120b`) |
+| 🔎 RAG | `unpdf` for parsing, `@langchain/textsplitters`, Gemini `gemini-embedding-001` (768 dimensions), Qdrant |
+| ⚡ API | Node.js, Express, Zod, Mongoose, Server-Sent Events for streaming |
+| 💾 Memory | MongoDB with the LangGraph MongoDB checkpointer |
+| 🎨 Frontend | Next.js (App Router), Tailwind CSS v4, Zustand, `react-markdown` |
+| 🔑 Auth | Clerk (social login only) |
+| 🛡️ Protection | `helmet`, per-user rate limits, a daily message quota |
 
-## Project structure
+## 📁 Project structure
 
-```
+```text
 job-agent/
-├── docker-compose.yml        Qdrant and MongoDB for local development
+├── docker-compose.yml        # Qdrant and MongoDB for local development
 ├── apps/
 │   ├── api/
 │   │   ├── src/
-│   │   │   ├── graph/        state, schemas, main graph, streaming
-│   │   │   ├── nodes/        router, chatAgent, analysis nodes
-│   │   │   ├── tools/        tools the chat agent can call
-│   │   │   ├── rag/          PDF parsing, chunking, embeddings, Qdrant
-│   │   │   ├── models/       Mongoose models
-│   │   │   ├── routes/       resume, chat, threads, applications
-│   │   │   ├── lib/          env, LLM, auth limits, helpers
-│   │   │   └── scripts/      ingest, chat (CLI), evals
-│   │   └── evals/            test cases and job posts for evals
+│   │   │   ├── graph/        # state, schemas, main graph, streaming
+│   │   │   ├── nodes/        # router, chatAgent, analysis nodes
+│   │   │   ├── tools/        # tools the chat agent can call
+│   │   │   ├── rag/          # PDF parsing, chunking, embeddings, Qdrant
+│   │   │   ├── models/       # Mongoose models
+│   │   │   ├── routes/       # resume, chat, threads, applications
+│   │   │   ├── lib/          # env, LLM, auth limits, helpers
+│   │   │   └── scripts/      # ingest, chat (CLI), evals
+│   │   └── evals/            # test cases and job posts for evals
 │   └── web/
-│       ├── app/              pages (chat, applications, resume, sign-in)
-│       ├── components/       chat, review sheet, tracker, uploader
-│       ├── lib/              API client and SSE stream reader
-│       └── store/            Zustand chat store
+│       ├── app/              # pages (chat, applications, resume, sign-in)
+│       ├── components/       # chat, review sheet, tracker, uploader
+│       ├── lib/              # API client and SSE stream reader
+│       └── store/            # Zustand chat store
 ```
 
-## Getting started
+## 🚀 Getting started
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Node.js 20 or newer
 - Docker (for MongoDB and Qdrant)
@@ -112,7 +114,7 @@ job-agent/
   - [Clerk](https://dashboard.clerk.com) for login (enable the social providers you want)
   - Tavily for web search (optional)
 
-### 1. Clone and start the databases
+### 1️⃣ Clone and start the databases
 
 ```bash
 git clone https://github.com/<your-username>/<your-repo>.git
@@ -122,7 +124,7 @@ docker compose up -d
 
 Qdrant's dashboard is at http://localhost:6333/dashboard.
 
-### 2. Run the API
+### 2️⃣ Run the API
 
 ```bash
 cd apps/api
@@ -133,7 +135,7 @@ npm run dev
 
 Check http://localhost:4000/health. Both `mongo` and `qdrant` should be `true`.
 
-### 3. Run the web app
+### 3️⃣ Run the web app
 
 ```bash
 cd apps/web
@@ -148,7 +150,7 @@ npm run dev
 
 Open http://localhost:3000, sign in, upload your resume on the Resume page, and paste a job post in Chat.
 
-### Environment variables
+### 🔐 Environment variables
 
 **`apps/api/.env`**
 
@@ -174,9 +176,9 @@ Open http://localhost:3000, sign in, upload your resume on the Resume page, and 
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` | `/chat` |
 
-Never commit `.env` files or your resume. The `data` folder is git-ignored.
+> ⚠️ Never commit `.env` files or your resume. The `data` folder is git-ignored.
 
-## API
+## 🔌 API
 
 All `/api` routes require a signed-in user (Clerk token in the `Authorization` header).
 
@@ -193,9 +195,13 @@ All `/api` routes require a signed-in user (Clerk token in the `Authorization` h
 | `PATCH /api/applications/:id` | Update the status |
 | `GET /health` | Public health check |
 
-Streaming events: `thread`, `node`, `tool`, `token`, `message`, `review`, `done`, `error`.
+### 📡 Streaming events
 
-## Scripts (in `apps/api`)
+`thread`, `node`, `tool`, `token`, `message`, `review`, `done`, `error`.
+
+## 🧪 Scripts
+
+Run these commands inside `apps/api`:
 
 | Command | What it does |
 |---|---|
@@ -205,32 +211,18 @@ Streaming events: `thread`, `node`, `tool`, `token`, `message`, `review`, `done`
 | `npm run chat` | Chat with the agent in the terminal |
 | `npm run evals` | Run the eval suite |
 
-## Evals
+## 📈 Evals
 
 `npm run evals` runs real job posts through the analysis pipeline and checks that:
 
-1. the parser finds the key requirements,
-2. good-fit roles score above the threshold and poor-fit roles score below it,
-3. the final draft has no unsupported claims.
+1. The parser finds the key requirements.
+2. Good-fit roles score above the threshold and poor-fit roles score below it.
+3. The final draft has no unsupported claims.
 
 Add your own cases in `apps/api/evals/cases.json` and job posts in `apps/api/evals/jobs/`. Run it after every prompt or threshold change to see whether the agent got better or worse.
 
-## Deployment
+---
 
-- **Web:** Vercel, with the root directory set to `apps/web`.
-- **API:** any host that runs a long-lived container (Render, Railway, Fly.io). A `Dockerfile` is in `apps/api`. Server-Sent Events need a long-running server.
-- **Databases:** MongoDB Atlas and Qdrant Cloud.
-- **Auth:** a Clerk production instance.
-
-Deploy the API first and check `/health`, then deploy the web app, then set `WEB_ORIGIN` on the API to the web app's exact address.
-
-## Roadmap
-
-- Hybrid search and reranking for retrieval
-- Import a job post from a URL
-- LangSmith tracing
-- Expose the tools through an MCP server
-
-## License
-
-Add a license of your choice (for example MIT) by creating a `LICENSE` file.
+<p align="center">
+  Built with ❤️ using LangGraph, TypeScript, and Next.js.
+</p>
