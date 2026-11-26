@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
-import { llm } from '../lib/llm.js';
+import { fastLlm } from '../lib/llm.js';
 import { contentToString } from '../lib/text.js';
 import { resetAnalysis, type MainStateType, type MainUpdate } from '../graph/state.js';
 
@@ -8,7 +8,7 @@ const routeSchema = z.object({
   intent: z.enum(['analyze_job', 'chat']),
 });
 
-const structured = llm.withStructuredOutput(routeSchema, { name: 'route' });
+const structured = fastLlm.withStructuredOutput(routeSchema, { name: 'route' });
 
 export async function router(state: MainStateType): Promise<MainUpdate> {
   const last = state.messages[state.messages.length - 1];

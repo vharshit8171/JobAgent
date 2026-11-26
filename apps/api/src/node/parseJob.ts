@@ -1,12 +1,12 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { RunnableConfig } from '@langchain/core/runnables';
-import { llm } from '../lib/llm.js';
+import { fastLlm } from '../lib/llm.js';
 import { parsedJobSchema } from '../graph/schemas.js';
 import type { State, Update } from '../graph/state.js';
 import { Thread } from '../model/Thread.js'; // adjust to your model
 
 // 1. Configure the LLM to return job information matching the predefined Zod schema.
-const structured = llm.withStructuredOutput(parsedJobSchema, { name: 'parsed_job' });
+const structured = fastLlm.withStructuredOutput(parsedJobSchema, { name: 'parsed_job' });
 
 // 2. Define a LangGraph node responsible for extracting structured information from a job description.
 export async function parseJob(state: State, config?: RunnableConfig): Promise<Update> {

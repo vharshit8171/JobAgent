@@ -15,6 +15,16 @@ export const llm = new ChatGroq({
   apiKey: env.GROQ_API_KEY, // Authenticate requests using the configured Groq API key.
 });
 
+// A second model for the simpler steps. Groq counts tokens per model,
+// so this gives you a second per-minute budget.
+export const fastLlm = new ChatGroq({
+  model: 'openai/gpt-oss-20b',
+  temperature: 0,
+  maxRetries: 2,
+  apiKey: env.GROQ_API_KEY,
+  maxTokens: 2000,
+});
+
 
 /**
  * 🤖 LARGE LANGUAGE MODEL CONFIGURATION

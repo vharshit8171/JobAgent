@@ -17,7 +17,7 @@ export async function retrieveEvidence(state: State): Promise<Update> {
 
   // 5. Search Qdrant for the two most relevant resume chunks per requirement.
   const results = await Promise.all(
-    vectors.map((v) => searchCareer(state.userId, v, 2))
+    vectors.map((v) => searchCareer(state.userId, v, 1))
   );
 
   // 6. Create a mapping between each requirement and its retrieved resume evidence.

@@ -6,7 +6,7 @@ export const parsedJobSchema = z.object({
   company: z.string(),
   requirements: z
     .array(z.string())
-    .describe('Distinct skills or qualifications the job asks for. One short phrase each, at most 10.'),
+    .describe('Distinct skills or qualifications the job asks for. One short phrase each, at most 6.'),
   responsibilities: z.array(z.string()),
 });
 

@@ -1,10 +1,10 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { llm } from '../lib/llm.js';
+import { fastLlm } from '../lib/llm.js';
 import { matchReportSchema } from '../graph/schemas.js';
 import type { State, Update } from '../graph/state.js';
 
 // 1. Configure the LLM to generate a structured candidate matching report.
-const structured = llm.withStructuredOutput(matchReportSchema, { name: 'match_report' });
+const structured = fastLlm.withStructuredOutput(matchReportSchema, { name: 'match_report' });
 
 // 2. Assign numerical points to each possible requirement matching status.
 const POINTS = { covered: 1, partial: 0.5, missing: 0 } as const;
